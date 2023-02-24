@@ -1,7 +1,4 @@
 
-#include <algorithm>
-#include <string.h>
-
 #include "esp_bt.h"
 #include "esp_bt_device.h"
 #include "esp_bt_main.h"
@@ -14,17 +11,12 @@
 #include "freertos/event_groups.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
+#include <algorithm>
+#include <string.h>
 
-// using gatts_read_evt_param = esp_ble_gatts_cb_param_t::gatts_read_evt_param;
-// using gatts_write_evt_param =
-// esp_ble_gatts_cb_param_t::gatts_write_evt_param;
+namespace host {
 
-namespace ble_host {
-
-static constexpr auto TAG = "ble_host";
-
-// #define ESP_APP_ID 0x55
-// #define SVC_INST_ID 0
+static constexpr auto TAG = "app_host";
 
 // clang-format off
 #define ENCODE_UUID_128(w32, w1, w2, w3, w48) \
@@ -52,25 +44,9 @@ static constexpr auto TAG = "ble_host";
     (((w16) >>  8) & 0xFF)
 // clang-format on
 
-// static constexpr uint16_t kMaxRequestedMtu = 247;
-// static constexpr uint16_t kMtuOverhead = 3;
-
-// Invalid connection id (0xffff);
-// constexpr uint16_t kInvalidConnId = -1;
-
 static uint8_t service_uuid[] = {
     ENCODE_UUID_128(0x6b6a78d7, 0x8ee0, 0x4a26, 0xba7b, 0x62e357dd9720)};
-
-// static const uint8_t model_uuid[] = {ENCODE_UUID_16(0x2a24)};
-// static const uint8_t revision_uuid[] = {ENCODE_UUID_16(0x2a26)};
-// static const uint8_t manufacturer_uuid[] = {ENCODE_UUID_16(0x2a29)};
-// static const uint8_t probe_info_uuid[] = {ENCODE_UUID_16(0xff01)};
-// static const uint8_t stepper_state_uuid[] = {ENCODE_UUID_16(0xff02)};
-// static const uint8_t current_histogram_uuid[] = {ENCODE_UUID_16(0xff03)};
-// static const uint8_t time_histogram_uuid[] = {ENCODE_UUID_16(0xff04)};
-// static const uint8_t distance_histogram_uuid[] = {ENCODE_UUID_16(0xff05)};
 static uint8_t command_uuid[] = {ENCODE_UUID_16(0xff06)};
-// static const uint8_t capture_uuid[] = {ENCODE_UUID_16(0xff07)};
 
 static esp_ble_adv_data_t adv_data = {
     .set_scan_rsp = false,
@@ -123,29 +99,9 @@ static uint8_t kPrimaryServiceDeclUuid[] = {
     ENCODE_UUID_16(ESP_GATT_UUID_PRI_SERVICE)};
 
 static uint8_t kCharDeclUuid[] = {ENCODE_UUID_16(ESP_GATT_UUID_CHAR_DECLARE)};
-// static uint8_t kChrConfigDeclUuid[] = {
-//     ENCODE_UUID_16(ESP_GATT_UUID_CHAR_CLIENT_CONFIG)};
-// static uint8_t kChrPropertyReadNotify =
-//     ESP_GATT_CHAR_PROP_BIT_READ | ESP_GATT_CHAR_PROP_BIT_NOTIFY;
-// static uint8_t kChrPropertyReadOnly = ESP_GATT_CHAR_PROP_BIT_READ;
 static uint8_t kChrPropertyWriteNrOnly = ESP_GATT_CHAR_PROP_BIT_WRITE_NR;
 
-// TODO: what does it do?
-// static uint8_t state_ccc_val[2] = {};
-
-// TODO: why do we need this?
-static uint8_t command_val[1] = {};
-
-// Model string = "Stepper Probe ESP32"
-// static const uint8_t model_str_value[] = {'S', 't', 'e', 'p', 'p', 'e', 'r',
-//     ' ', 'P', 'r', 'o', 'b', 'e', ' ', 'E', 'S', 'P', '3', '2'};
-
-// Revision string = "00.00.01"
-// static const uint8_t revision_str_value[] = {
-//     '0', '0', '.', '0', '0', '.', '0', '1'};
-
-// Manufacturer string = "Zapta"
-// static const uint8_t manufacturer_str_value[] = {'Z', 'a', 'p', 't', 'a'};
+static uint8_t command_val[8] = {};
 
 enum {
   ATTR_IDX_SVC,
@@ -156,39 +112,25 @@ enum {
   ATTR_IDX_COUNT,  // Count.
 };
 
-// NOTE: x can't be const.
-// #define LEN_BYTES(x) sizeof(x), (uint8_t*)(&(x))
-// #define LEN_LEN_BYTES(x) sizeof(x), sizeof(x), (uint8_t*)(&(x))
-
 // The main BLE attribute table.
 static const esp_gatts_attr_db_t attr_table[ATTR_IDX_COUNT] = {
 
     [ATTR_IDX_SVC] = {{ESP_GATT_AUTO_RSP},
-        {// LEN_BYTES(kPrimaryServiceDeclUuid),
-            sizeof(kPrimaryServiceDeclUuid), kPrimaryServiceDeclUuid,
-
-            ESP_GATT_PERM_READ,
-
-            // LEN_LEN_BYTES(service_uuid)
-            sizeof(service_uuid), sizeof(service_uuid), service_uuid
-
-        }},
+        {sizeof(kPrimaryServiceDeclUuid), kPrimaryServiceDeclUuid,
+            ESP_GATT_PERM_READ, sizeof(service_uuid), sizeof(service_uuid),
+            service_uuid}},
 
     // ----- Command.
     //
     // Characteristic
     [ATTR_IDX_COMMAND] = {{ESP_GATT_AUTO_RSP},
-        {// LEN_BYTES(kCharDeclUuid),
-            sizeof(kCharDeclUuid), kCharDeclUuid, ESP_GATT_PERM_READ,
-            // LEN_LEN_BYTES(kChrPropertyWriteNrOnly)
+        {sizeof(kCharDeclUuid), kCharDeclUuid, ESP_GATT_PERM_READ,
             sizeof(kChrPropertyWriteNrOnly), sizeof(kChrPropertyWriteNrOnly),
             &kChrPropertyWriteNrOnly}},
 
     // Value
     [ATTR_IDX_COMMAND_VAL] = {{ESP_GATT_AUTO_RSP},
-        {// LEN_BYTES(command_uuid),
-            sizeof(command_uuid), command_uuid, ESP_GATT_PERM_WRITE,
-            // LEN_LEN_BYTES(command_val)
+        {sizeof(command_uuid), command_uuid, ESP_GATT_PERM_WRITE,
             sizeof(command_val), sizeof(command_val), command_val}},
 
 };
@@ -216,7 +158,6 @@ static void gap_event_handler(
       }
       break;
 
-      // #endif
     case ESP_GAP_BLE_ADV_START_COMPLETE_EVT:
       // advertising start complete event to indicate advertising start
       // successfully or failed
@@ -422,4 +363,4 @@ void setup() {
   }
 }
 
-}  // namespace ble_host
+}  // namespace host

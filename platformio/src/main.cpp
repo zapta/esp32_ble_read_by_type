@@ -7,11 +7,12 @@
 #include "nvs_flash.h"
 #include <stdio.h>
 
-static constexpr auto TAG = "main";
+static constexpr auto TAG = "app_main";
 
-namespace ble_host {
+namespace host {
+// Implemented in host.cpp
 void setup();
-}
+}  // namespace host
 
 void nvs_init() {
   esp_err_t err = nvs_flash_init();
@@ -35,20 +36,10 @@ void nvs_init() {
   }
 }
 
-// static void setup() {
-//   nvs_init();
-//   ble_host::setup();
-// }
-
-// static void loop() { vTaskDelay(100); }
-
 extern "C" void app_main() {
   nvs_init();
-  ble_host::setup();
-
-  for (int i = 0; ; i++) {
-    ESP_LOGI(TAG, "%03d. loop", i);
+  host::setup();
+  for (;;;) {
     vTaskDelay(100);
-    // loop();
   }
 }
