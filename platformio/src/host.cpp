@@ -51,7 +51,7 @@ static uint8_t command_uuid[] = {ENCODE_UUID_16(0xff06)};
 static esp_ble_adv_data_t adv_data = {
     .set_scan_rsp = false,
     .include_name = true,
-    .include_txpower = true,
+    .include_txpower = false,
     .min_interval = 0x0006,
     .max_interval = 0x0010,
     .appearance = 0x00,
@@ -199,7 +199,7 @@ static void gatts_event_handler(esp_gatts_cb_event_t event,
     case ESP_GATTS_REG_EVT: {
       ESP_LOGI(TAG, "ESP_GATTS_REG_EVT event");
       assert(param->reg.status == ESP_GATT_OK);
-      const char* device_name = "esp32-write-by-type";
+      const char* device_name = "esp32-test";
       ESP_LOGI(TAG, "Device name: %s", device_name);
       esp_err_t err = esp_ble_gap_set_device_name(device_name);
       if (err) {

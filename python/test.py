@@ -6,7 +6,7 @@ from bleak import BleakClient, BleakScanner
 import signal
 
 # Adapt to your BLE device.
-device_address = "0C:8B:95:F2:B4:36"
+device_address = "EC:62:60:B2:EA:56"
 
 signal.signal(signal.SIGINT, lambda number, frame: sys.exit())
 

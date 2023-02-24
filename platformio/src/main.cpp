@@ -39,7 +39,7 @@ void nvs_init() {
 extern "C" void app_main() {
   nvs_init();
   host::setup();
-  for (;;;) {
+  for (;;) {
     vTaskDelay(100);
   }
 }
