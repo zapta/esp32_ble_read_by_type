@@ -35,6 +35,6 @@ async def test():
           await asyncio.sleep(0.5)
         print(f"\nAll done.", flush=True)
         print(f"Type Ctrl-C to abort.", flush=True)
-        sys.exit()
+        #sys.exit()
 
 asyncio.run(test())

@@ -1,3 +1,4 @@
+#include "host.h"
 
 #include "esp_bt.h"
 #include "esp_bt_device.h"
@@ -135,7 +136,9 @@ static const esp_gatts_attr_db_t attr_table[ATTR_IDX_COUNT] = {
 
 };
 
-static uint16_t handle_table[ATTR_IDX_COUNT];
+// static uint16_t handle_table[ATTR_IDX_COUNT];
+
+static bool connected = false;
 
 static void gap_event_handler(
     esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t* param) {
@@ -265,12 +268,14 @@ static void gatts_event_handler(esp_gatts_cb_event_t event,
       conn_params.min_int = 0x10;
       conn_params.timeout = 400;
       esp_ble_gap_update_conn_params(&conn_params);
+      connected = true;
     } break;
 
     case ESP_GATTS_DISCONNECT_EVT:
       ESP_LOGI(TAG, "ESP_GATTS_DISCONNECT_EVT, reason = 0x%x",
           param->disconnect.reason);
       esp_ble_gap_start_advertising(&adv_params);
+      connected = false;
       break;
 
     case ESP_GATTS_CREAT_ATTR_TAB_EVT: {
@@ -284,8 +289,9 @@ static void gatts_event_handler(esp_gatts_cb_event_t event,
       } else {
         ESP_LOGI(TAG, "create attribute table successfully, num handles = %d",
             param->add_attr_tab.num_handle);
-        memcpy(handle_table, param->add_attr_tab.handles, sizeof(handle_table));
-        esp_ble_gatts_start_service(handle_table[ATTR_IDX_SVC]);
+        assert(param->add_attr_tab.num_handle == ATTR_IDX_COUNT);
+        // memcpy(handle_table, param->add_attr_tab.handles, sizeof(handle_table));
+        esp_ble_gatts_start_service(param->add_attr_tab.handles[ATTR_IDX_SVC]);
       }
       break;
     }
@@ -361,6 +367,10 @@ void setup() {
     ESP_LOGE(TAG, "set local  MTU failed, error code = %x", ret);
     assert(0);
   }
+}
+
+bool is_connected() {
+  return connected;
 }
 
 }  // namespace host

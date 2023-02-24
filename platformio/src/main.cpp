@@ -1,18 +1,15 @@
 
+#include "driver/gpio.h"
 #include "esp_log.h"
 #include "esp_system.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "host.h"
 #include "nvs.h"
 #include "nvs_flash.h"
 #include <stdio.h>
 
 static constexpr auto TAG = "app_main";
-
-namespace host {
-// Implemented in host.cpp
-void setup();
-}  // namespace host
 
 void nvs_init() {
   esp_err_t err = nvs_flash_init();
@@ -37,9 +34,13 @@ void nvs_init() {
 }
 
 extern "C" void app_main() {
+  gpio_set_direction(GPIO_NUM_2, GPIO_MODE_OUTPUT);
+  gpio_set_level(GPIO_NUM_2, 1);
   nvs_init();
   host::setup();
-  for (;;) {
-    vTaskDelay(100);
+  for (uint32_t i = 0;; i++) {
+    vTaskDelay(10);
+    const uint32_t blink_mask = host::is_connected() ? 0x0001 : 0x0008;
+    gpio_set_level(GPIO_NUM_2, i & blink_mask ? 1 : 0);
   }
 }
