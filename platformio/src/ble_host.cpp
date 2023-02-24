@@ -58,19 +58,19 @@ static constexpr auto TAG = "ble_host";
 // Invalid connection id (0xffff);
 // constexpr uint16_t kInvalidConnId = -1;
 
-static const uint8_t service_uuid[] = {
+static uint8_t service_uuid[] = {
     ENCODE_UUID_128(0x6b6a78d7, 0x8ee0, 0x4a26, 0xba7b, 0x62e357dd9720)};
 
-static const uint8_t model_uuid[] = {ENCODE_UUID_16(0x2a24)};
-static const uint8_t revision_uuid[] = {ENCODE_UUID_16(0x2a26)};
-static const uint8_t manufacturer_uuid[] = {ENCODE_UUID_16(0x2a29)};
-static const uint8_t probe_info_uuid[] = {ENCODE_UUID_16(0xff01)};
-static const uint8_t stepper_state_uuid[] = {ENCODE_UUID_16(0xff02)};
-static const uint8_t current_histogram_uuid[] = {ENCODE_UUID_16(0xff03)};
-static const uint8_t time_histogram_uuid[] = {ENCODE_UUID_16(0xff04)};
-static const uint8_t distance_histogram_uuid[] = {ENCODE_UUID_16(0xff05)};
-static const uint8_t command_uuid[] = {ENCODE_UUID_16(0xff06)};
-static const uint8_t capture_uuid[] = {ENCODE_UUID_16(0xff07)};
+// static const uint8_t model_uuid[] = {ENCODE_UUID_16(0x2a24)};
+// static const uint8_t revision_uuid[] = {ENCODE_UUID_16(0x2a26)};
+// static const uint8_t manufacturer_uuid[] = {ENCODE_UUID_16(0x2a29)};
+// static const uint8_t probe_info_uuid[] = {ENCODE_UUID_16(0xff01)};
+// static const uint8_t stepper_state_uuid[] = {ENCODE_UUID_16(0xff02)};
+// static const uint8_t current_histogram_uuid[] = {ENCODE_UUID_16(0xff03)};
+// static const uint8_t time_histogram_uuid[] = {ENCODE_UUID_16(0xff04)};
+// static const uint8_t distance_histogram_uuid[] = {ENCODE_UUID_16(0xff05)};
+static uint8_t command_uuid[] = {ENCODE_UUID_16(0xff06)};
+// static const uint8_t capture_uuid[] = {ENCODE_UUID_16(0xff07)};
 
 static esp_ble_adv_data_t adv_data = {
     .set_scan_rsp = false,
@@ -121,195 +121,75 @@ static bool scan_rsp_configured = false;
 
 static uint8_t kPrimaryServiceDeclUuid[] = {
     ENCODE_UUID_16(ESP_GATT_UUID_PRI_SERVICE)};
+
 static uint8_t kCharDeclUuid[] = {ENCODE_UUID_16(ESP_GATT_UUID_CHAR_DECLARE)};
-static uint8_t kChrConfigDeclUuid[] = {
-    ENCODE_UUID_16(ESP_GATT_UUID_CHAR_CLIENT_CONFIG)};
-static uint8_t kChrPropertyReadNotify =
-    ESP_GATT_CHAR_PROP_BIT_READ | ESP_GATT_CHAR_PROP_BIT_NOTIFY;
-static uint8_t kChrPropertyReadOnly = ESP_GATT_CHAR_PROP_BIT_READ;
+// static uint8_t kChrConfigDeclUuid[] = {
+//     ENCODE_UUID_16(ESP_GATT_UUID_CHAR_CLIENT_CONFIG)};
+// static uint8_t kChrPropertyReadNotify =
+//     ESP_GATT_CHAR_PROP_BIT_READ | ESP_GATT_CHAR_PROP_BIT_NOTIFY;
+// static uint8_t kChrPropertyReadOnly = ESP_GATT_CHAR_PROP_BIT_READ;
 static uint8_t kChrPropertyWriteNrOnly = ESP_GATT_CHAR_PROP_BIT_WRITE_NR;
 
 // TODO: what does it do?
-static uint8_t state_ccc_val[2] = {};
+// static uint8_t state_ccc_val[2] = {};
 
 // TODO: why do we need this?
 static uint8_t command_val[1] = {};
 
 // Model string = "Stepper Probe ESP32"
-static const uint8_t model_str_value[] = {'S', 't', 'e', 'p', 'p', 'e', 'r',
-    ' ', 'P', 'r', 'o', 'b', 'e', ' ', 'E', 'S', 'P', '3', '2'};
+// static const uint8_t model_str_value[] = {'S', 't', 'e', 'p', 'p', 'e', 'r',
+//     ' ', 'P', 'r', 'o', 'b', 'e', ' ', 'E', 'S', 'P', '3', '2'};
 
 // Revision string = "00.00.01"
-static const uint8_t revision_str_value[] = {
-    '0', '0', '.', '0', '0', '.', '0', '1'};
+// static const uint8_t revision_str_value[] = {
+//     '0', '0', '.', '0', '0', '.', '0', '1'};
 
 // Manufacturer string = "Zapta"
-static const uint8_t manufacturer_str_value[] = {'Z', 'a', 'p', 't', 'a'};
+// static const uint8_t manufacturer_str_value[] = {'Z', 'a', 'p', 't', 'a'};
 
 enum {
   ATTR_IDX_SVC,
 
-  // ATTR_IDX_MODEL,
-  // ATTR_IDX_MODEL_VAL,
-
-  // ATTR_IDX_REVISION,
-  // ATTR_IDX_REVISION_VAL,
-
-  // ATTR_IDX_MANUFECTURER,
-  // ATTR_IDX_MANUFECTURER_VAL,
-
-  // ATTR_IDX_PROBE_INFO,
-  // ATTR_IDX_PROBE_INFO_VAL,
-
-  // ATTR_IDX_STEPPER_STATE,
-  // ATTR_IDX_STEPPER_STATE_VAL,
-  // ATTR_IDX_STEPPER_STATE_CCC,
-
-  // ATTR_IDX_CURRENT_HISTOGRAM,
-  // ATTR_IDX_CURRENT_HISTOGRAM_VAL,
-
-  // ATTR_IDX_TIME_HISTOGRAM,
-  // ATTR_IDX_TIME_HISTOGRAM_VAL,
-
-  // ATTR_IDX_DISTANCE_HISTOGRAM,
-  // ATTR_IDX_DISTANCE_HISTOGRAM_VAL,
-
   ATTR_IDX_COMMAND,
   ATTR_IDX_COMMAND_VAL,
-
-  // ATTR_IDX_CAPTURE,
-  // ATTR_IDX_CAPTURE_VAL,
 
   ATTR_IDX_COUNT,  // Count.
 };
 
 // NOTE: x can't be const.
-#define LEN_BYTES(x) sizeof(x), (uint8_t*)(&(x))
-#define LEN_LEN_BYTES(x) sizeof(x), sizeof(x), (uint8_t*)(&(x))
+// #define LEN_BYTES(x) sizeof(x), (uint8_t*)(&(x))
+// #define LEN_LEN_BYTES(x) sizeof(x), sizeof(x), (uint8_t*)(&(x))
 
 // The main BLE attribute table.
 static const esp_gatts_attr_db_t attr_table[ATTR_IDX_COUNT] = {
 
     [ATTR_IDX_SVC] = {{ESP_GATT_AUTO_RSP},
-        {LEN_BYTES(kPrimaryServiceDeclUuid), ESP_GATT_PERM_READ,
-            LEN_LEN_BYTES(service_uuid)}},
+        {// LEN_BYTES(kPrimaryServiceDeclUuid),
+            sizeof(kPrimaryServiceDeclUuid), kPrimaryServiceDeclUuid,
 
-    // // ----- Device Model.
-    // //
-    // // Characteristic
-    // [ATTR_IDX_MODEL] =
+            ESP_GATT_PERM_READ,
 
-    //     {{ESP_GATT_AUTO_RSP},
-    //         {LEN_BYTES(kCharDeclUuid), ESP_GATT_PERM_READ,
-    //             LEN_LEN_BYTES(kChrPropertyReadOnly)}},
+            // LEN_LEN_BYTES(service_uuid)
+            sizeof(service_uuid), sizeof(service_uuid), service_uuid
 
-    // // Value.
-    // [ATTR_IDX_MODEL_VAL] = {{ESP_GATT_AUTO_RSP},
-    //     {LEN_BYTES(model_uuid), ESP_GATT_PERM_READ,
-    //         LEN_LEN_BYTES(model_str_value)}},
-
-    // // ----- Firmware revision
-    // //
-    // // Characteristic
-    // [ATTR_IDX_REVISION] = {{ESP_GATT_AUTO_RSP},
-    //     {LEN_BYTES(kCharDeclUuid), ESP_GATT_PERM_READ,
-    //         LEN_LEN_BYTES(kChrPropertyReadOnly)}},
-    // // Value.
-    // [ATTR_IDX_REVISION_VAL] = {{ESP_GATT_AUTO_RSP},
-    //     {LEN_BYTES(revision_uuid), ESP_GATT_PERM_READ,
-    //         LEN_LEN_BYTES(revision_str_value)}},
-
-    // // ----- Manufacturer name
-    // //
-    // // Characteristic
-    // [ATTR_IDX_MANUFECTURER] = {{ESP_GATT_AUTO_RSP},
-    //     {LEN_BYTES(kCharDeclUuid), ESP_GATT_PERM_READ,
-    //         LEN_LEN_BYTES(kChrPropertyReadOnly)}},
-    // // Value.
-    // [ATTR_IDX_MANUFECTURER_VAL] = {{ESP_GATT_AUTO_RSP},
-    //     {LEN_BYTES(manufacturer_uuid), ESP_GATT_PERM_READ,
-    //         LEN_LEN_BYTES(manufacturer_str_value)}},
-
-    // // ----- Probe info
-    // //
-    // // Characteristic
-    // [ATTR_IDX_PROBE_INFO] = {{ESP_GATT_AUTO_RSP},
-    //     {LEN_BYTES(kCharDeclUuid), ESP_GATT_PERM_READ,
-    //         LEN_LEN_BYTES(kChrPropertyReadOnly)}},
-
-    // // Value
-    // [ATTR_IDX_PROBE_INFO_VAL] = {{ESP_GATT_RSP_BY_APP},
-    //     {LEN_BYTES(probe_info_uuid), ESP_GATT_PERM_READ, 0, 0, nullptr}},
-
-    // // ----- Stepper state.
-    // //
-    // // Characteristic
-    // [ATTR_IDX_STEPPER_STATE] = {{ESP_GATT_AUTO_RSP},
-    //     {LEN_BYTES(kCharDeclUuid), ESP_GATT_PERM_READ,
-    //         LEN_LEN_BYTES(kChrPropertyReadNotify)}},
-    // // Value
-    // [ATTR_IDX_STEPPER_STATE_VAL] = {{ESP_GATT_RSP_BY_APP},
-    //     {LEN_BYTES(stepper_state_uuid), ESP_GATT_PERM_READ, 0, 0, nullptr}},
-
-    // // Client Characteristic Configuration Descriptor
-    // [ATTR_IDX_STEPPER_STATE_CCC] = {{ESP_GATT_AUTO_RSP},
-    //     {LEN_BYTES(kChrConfigDeclUuid),
-    //         ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE,
-    //         LEN_LEN_BYTES(state_ccc_val)}},
-
-    // // ----- Current histogram.
-    // //
-    // // Characteristic
-    // [ATTR_IDX_CURRENT_HISTOGRAM] = {{ESP_GATT_AUTO_RSP},
-    //     {LEN_BYTES(kCharDeclUuid), ESP_GATT_PERM_READ,
-    //         LEN_LEN_BYTES(kChrPropertyReadOnly)}},
-    // // Value
-    // [ATTR_IDX_CURRENT_HISTOGRAM_VAL] = {{ESP_GATT_RSP_BY_APP},
-    //     {LEN_BYTES(current_histogram_uuid), ESP_GATT_PERM_READ, 0, 0, nullptr}},
-
-    // // ----- Time histogram.
-    // //
-    // // Characteristic
-    // [ATTR_IDX_TIME_HISTOGRAM] = {{ESP_GATT_AUTO_RSP},
-    //     {LEN_BYTES(kCharDeclUuid), ESP_GATT_PERM_READ,
-    //         LEN_LEN_BYTES(kChrPropertyReadOnly)}},
-    // // Value
-    // [ATTR_IDX_TIME_HISTOGRAM_VAL] = {{ESP_GATT_RSP_BY_APP},
-    //     {LEN_BYTES(time_histogram_uuid), ESP_GATT_PERM_READ, 0, 0, nullptr}},
-
-    // // ----- Distance histogram.
-    // //
-    // // Characteristic
-    // [ATTR_IDX_DISTANCE_HISTOGRAM] = {{ESP_GATT_AUTO_RSP},
-    //     {LEN_BYTES(kCharDeclUuid), ESP_GATT_PERM_READ,
-    //         LEN_LEN_BYTES(kChrPropertyReadOnly)}},
-    // // Value
-    // [ATTR_IDX_DISTANCE_HISTOGRAM_VAL] = {{ESP_GATT_RSP_BY_APP},
-    //     {LEN_BYTES(distance_histogram_uuid), ESP_GATT_PERM_READ, 0, 0,
-    //         nullptr}},
+        }},
 
     // ----- Command.
     //
     // Characteristic
     [ATTR_IDX_COMMAND] = {{ESP_GATT_AUTO_RSP},
-        {LEN_BYTES(kCharDeclUuid), ESP_GATT_PERM_READ,
-            LEN_LEN_BYTES(kChrPropertyWriteNrOnly)}},
+        {// LEN_BYTES(kCharDeclUuid),
+            sizeof(kCharDeclUuid), kCharDeclUuid, ESP_GATT_PERM_READ,
+            // LEN_LEN_BYTES(kChrPropertyWriteNrOnly)
+            sizeof(kChrPropertyWriteNrOnly), sizeof(kChrPropertyWriteNrOnly),
+            &kChrPropertyWriteNrOnly}},
 
     // Value
     [ATTR_IDX_COMMAND_VAL] = {{ESP_GATT_AUTO_RSP},
-        {LEN_BYTES(command_uuid), ESP_GATT_PERM_WRITE,
-            LEN_LEN_BYTES(command_val)}},
-
-    // // ----- Capture.
-    // //
-    // // Characteristic
-    // [ATTR_IDX_CAPTURE] = {{ESP_GATT_AUTO_RSP},
-    //     {LEN_BYTES(kCharDeclUuid), ESP_GATT_PERM_READ,
-    //         LEN_LEN_BYTES(kChrPropertyReadOnly)}},
-
-    // // Value
-    // [ATTR_IDX_CAPTURE_VAL] = {{ESP_GATT_RSP_BY_APP},
-    //     {LEN_BYTES(capture_uuid), ESP_GATT_PERM_READ, 0, 0, nullptr}},
+        {// LEN_BYTES(command_uuid),
+            sizeof(command_uuid), command_uuid, ESP_GATT_PERM_WRITE,
+            // LEN_LEN_BYTES(command_val)
+            sizeof(command_val), sizeof(command_val), command_val}},
 
 };
 
