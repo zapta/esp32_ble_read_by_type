@@ -43,11 +43,11 @@ void nvs_init() {
 // static void loop() { vTaskDelay(100); }
 
 extern "C" void app_main() {
-  // setup();
   nvs_init();
   ble_host::setup();
 
-  for (;;) {
+  for (int i = 0; ; i++) {
+    ESP_LOGI(TAG, "%03d. loop", i);
     vTaskDelay(100);
     // loop();
   }
