@@ -32,9 +32,10 @@ async def test():
           print(f"\n{i + 1} Writing...", flush=True)
           await client.write_gatt_char(chrc, bytearray([0x06, 0x03]))
           print("Wirting done.")
-          await asyncio.sleep(0.5)
+          await asyncio.sleep(0.2)
         print(f"\nAll done.", flush=True)
         print(f"Type Ctrl-C to abort.", flush=True)
-        #sys.exit()
+    print(f"111", flush=True)
 
 asyncio.run(test())
+print(f"222", flush=True)
