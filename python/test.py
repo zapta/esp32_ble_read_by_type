@@ -16,6 +16,7 @@ print(f"Python {sys.version}", flush=True)
 
 
 async def test():
+    global main_event_loop
     print(f"Trying to connect to {device_address}", flush=True)
     device = await BleakScanner.find_device_by_address(device_address, timeout=10.0)
     assert device
@@ -36,6 +37,11 @@ async def test():
             print("Writing done.")
             await asyncio.sleep(0.2)
         print(f"\nAll done.", flush=True)
-        print(f"Ctl-C to exit.", flush=True)
+        main_event_loop.stop()
 
-asyncio.run(test())
+
+main_event_loop = asyncio.new_event_loop()
+try:
+    main_event_loop.run_until_complete(test())
+except:
+    pass
